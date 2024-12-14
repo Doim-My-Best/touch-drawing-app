@@ -17,6 +17,7 @@ let erasing = false;
 // Set up drawing or erasing
 function setMode(isErasing) {
     erasing = isErasing;
+    ctx.globalCompositeOperation = isErasing ? 'destination-out' : 'source-over';
 }
 
 // Start drawing or erasing
@@ -39,16 +40,10 @@ function draw(e) {
     const x = e.touches ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
     const y = e.touches ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
 
-    if (erasing) {
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.lineWidth = 20; // Eraser size
-    } else {
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.lineWidth = 2; // Pen size
-        ctx.strokeStyle = '#000'; // Black
-    }
-
+    ctx.lineWidth = erasing ? 20 : 2; // Eraser is thicker than pen
     ctx.lineCap = 'round';
+    ctx.strokeStyle = erasing ? 'rgba(255,255,255,1)' : '#000'; // Pen is black
+
     ctx.lineTo(x, y);
     ctx.stroke();
     ctx.beginPath();
