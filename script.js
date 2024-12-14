@@ -14,15 +14,17 @@ window.addEventListener('resize', resizeCanvas);
 let drawing = false;
 let erasing = false;
 let addingText = false;
+let addingHeart = false;
 
 // Set up modes
 function setMode(mode) {
     erasing = mode === 'eraser';
     addingText = mode === 'text';
+    addingHeart = mode === 'heart';
     ctx.globalCompositeOperation = erasing ? 'destination-out' : 'source-over';
 }
 
-// Start drawing or adding text
+// Start drawing, adding text, or stamping hearts
 function startDrawing(e) {
     if (addingText) {
         const rect = canvas.getBoundingClientRect();
@@ -34,6 +36,11 @@ function startDrawing(e) {
             ctx.fillStyle = "#000";
             ctx.fillText(text, x, y);
         }
+    } else if (addingHeart) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.touches ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+        const y = e.touches ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+        drawHeart(x, y);
     } else {
         drawing = true;
         draw(e);
@@ -48,7 +55,7 @@ function stopDrawing() {
 
 // Draw or erase
 function draw(e) {
-    if (!drawing || addingText) return;
+    if (!drawing || addingText || addingHeart) return;
 
     const rect = canvas.getBoundingClientRect();
     const x = e.touches ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
@@ -62,6 +69,19 @@ function draw(e) {
     ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(x, y);
+}
+
+// Draw a heart at specified coordinates
+function drawHeart(x, y) {
+    ctx.save();
+    ctx.fillStyle = "#ff0000"; // Red color
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.bezierCurveTo(x - 15, y - 15, x - 15, y + 10, x, y + 20);
+    ctx.bezierCurveTo(x + 15, y + 10, x + 15, y - 15, x, y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
 }
 
 // Event listeners for mouse and touch events
@@ -78,3 +98,4 @@ canvas.addEventListener('touchend', stopDrawing);
 document.getElementById('penButton').addEventListener('click', () => setMode('pen'));
 document.getElementById('eraserButton').addEventListener('click', () => setMode('eraser'));
 document.getElementById('textButton').addEventListener('click', () => setMode('text'));
+document.getElementById('heartButton').addEventListener('click', () => setMode('heart'));
