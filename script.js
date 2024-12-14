@@ -10,38 +10,31 @@ function resizeCanvas() {
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
-// Drawing state
-let drawing = false;
-let erasing = false;
-let addingText = false;
-let addingHeart = false;
+// Tool state
+let activeTool = 'pen'; // Default tool is the pen
 
-// Set up modes
-function setMode(mode) {
-    erasing = mode === 'eraser';
-    addingText = mode === 'text';
-    addingHeart = mode === 'heart';
-    ctx.globalCompositeOperation = erasing ? 'destination-out' : 'source-over';
+// Set the active tool
+function setTool(tool) {
+    activeTool = tool;
+    ctx.globalCompositeOperation = tool === 'eraser' ? 'destination-out' : 'source-over';
 }
 
 // Start drawing, adding text, or stamping hearts
 function startDrawing(e) {
-    if (addingText) {
-        const rect = canvas.getBoundingClientRect();
-        const x = e.touches ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-        const y = e.touches ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.touches ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+    const y = e.touches ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+
+    if (activeTool === 'text') {
         const text = prompt("Enter your text:");
         if (text) {
             ctx.font = "20px Arial";
             ctx.fillStyle = "#000";
             ctx.fillText(text, x, y);
         }
-    } else if (addingHeart) {
-        const rect = canvas.getBoundingClientRect();
-        const x = e.touches ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-        const y = e.touches ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+    } else if (activeTool === 'heart') {
         drawHeart(x, y);
-    } else {
+    } else if (activeTool === 'pen' || activeTool === 'eraser') {
         drawing = true;
         draw(e);
     }
@@ -55,15 +48,15 @@ function stopDrawing() {
 
 // Draw or erase
 function draw(e) {
-    if (!drawing || addingText || addingHeart) return;
+    if (!drawing || activeTool !== 'pen' && activeTool !== 'eraser') return;
 
     const rect = canvas.getBoundingClientRect();
     const x = e.touches ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
     const y = e.touches ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
 
-    ctx.lineWidth = erasing ? 20 : 2; // Eraser is thicker than pen
+    ctx.lineWidth = activeTool === 'eraser' ? 20 : 2; // Eraser is thicker than pen
     ctx.lineCap = 'round';
-    ctx.strokeStyle = erasing ? 'rgba(255,255,255,1)' : '#000'; // Pen is black
+    ctx.strokeStyle = activeTool === 'eraser' ? 'rgba(255,255,255,1)' : '#000'; // Pen is black
 
     ctx.lineTo(x, y);
     ctx.stroke();
@@ -94,8 +87,8 @@ canvas.addEventListener('touchstart', startDrawing);
 canvas.addEventListener('touchmove', draw);
 canvas.addEventListener('touchend', stopDrawing);
 
-// Buttons for switching modes
-document.getElementById('penButton').addEventListener('click', () => setMode('pen'));
-document.getElementById('eraserButton').addEventListener('click', () => setMode('eraser'));
-document.getElementById('textButton').addEventListener('click', () => setMode('text'));
-document.getElementById('heartButton').addEventListener('click', () => setMode('heart'));
+// Buttons for switching tools
+document.getElementById('penButton').addEventListener('click', () => setTool('pen'));
+document.getElementById('eraserButton').addEventListener('click', () => setTool('eraser'));
+document.getElementById('textButton').addEventListener('click', () => setTool('text'));
+document.getElementById('heartButton').addEventListener('click', () => setTool('heart'));
