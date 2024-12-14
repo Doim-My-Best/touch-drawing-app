@@ -13,20 +13,34 @@ window.addEventListener('resize', resizeCanvas);
 // Drawing state
 let drawing = false;
 let erasing = false;
+let addingText = false;
 
-// Set up drawing or erasing
-function setMode(isErasing) {
-    erasing = isErasing;
-    ctx.globalCompositeOperation = isErasing ? 'destination-out' : 'source-over';
+// Set up modes
+function setMode(mode) {
+    erasing = mode === 'eraser';
+    addingText = mode === 'text';
+    ctx.globalCompositeOperation = erasing ? 'destination-out' : 'source-over';
 }
 
-// Start drawing or erasing
+// Start drawing or adding text
 function startDrawing(e) {
-    drawing = true;
-    draw(e);
+    if (addingText) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.touches ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+        const y = e.touches ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+        const text = prompt("Enter your text:");
+        if (text) {
+            ctx.font = "20px Arial";
+            ctx.fillStyle = "#000";
+            ctx.fillText(text, x, y);
+        }
+    } else {
+        drawing = true;
+        draw(e);
+    }
 }
 
-// Stop drawing or erasing
+// Stop drawing
 function stopDrawing() {
     drawing = false;
     ctx.beginPath();
@@ -34,7 +48,7 @@ function stopDrawing() {
 
 // Draw or erase
 function draw(e) {
-    if (!drawing) return;
+    if (!drawing || addingText) return;
 
     const rect = canvas.getBoundingClientRect();
     const x = e.touches ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
@@ -61,5 +75,6 @@ canvas.addEventListener('touchmove', draw);
 canvas.addEventListener('touchend', stopDrawing);
 
 // Buttons for switching modes
-document.getElementById('penButton').addEventListener('click', () => setMode(false));
-document.getElementById('eraserButton').addEventListener('click', () => setMode(true));
+document.getElementById('penButton').addEventListener('click', () => setMode('pen'));
+document.getElementById('eraserButton').addEventListener('click', () => setMode('eraser'));
+document.getElementById('textButton').addEventListener('click', () => setMode('text'));
